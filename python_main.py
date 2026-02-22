@@ -93,13 +93,13 @@ class UniversitySystem:
         try:
             with open(self.database_path, 'r', encoding='utf-8') as f:
                 self.database_data = json.load(f)
-            print(f"✓ Successfully loaded database from {self.database_path}")
+            print(f"[OK] Successfully loaded database from {self.database_path}")
             return self.database_data
         except FileNotFoundError:
-            print(f"✗ Error: {self.database_path} not found!")
+            print(f"[ERROR] {self.database_path} not found!")
             sys.exit(1)
         except json.JSONDecodeError as e:
-            print(f"✗ Error: Invalid JSON format in {self.database_path}: {e}")
+            print(f"[ERROR] Invalid JSON format in {self.database_path}: {e}")
             sys.exit(1)
     
     def call_haskell_engine(self) -> Dict:
@@ -111,7 +111,7 @@ class UniversitySystem:
             Dictionary containing student averages and distinction status
         """
         try:
-            print("\n🔄 Calling Haskell engine (grades.hs)...")
+            print("\n[CALLING] Calling Haskell engine (grades.hs)...")
             result = subprocess.run(
                 ["runhaskell", "grades.hs"],
                 capture_output=True,
@@ -121,18 +121,18 @@ class UniversitySystem:
             
             # Parse JSON output from Haskell
             haskell_output = json.loads(result.stdout)
-            print("✓ Haskell engine executed successfully")
+            print("[OK] Haskell engine executed successfully")
             return haskell_output
             
         except FileNotFoundError:
-            print("⚠ Warning: Haskell program (grades.hs) not found or runhaskell not in PATH")
+            print("[WARNING] Haskell program (grades.hs) not found or runhaskell not in PATH")
             print("  Returning empty results. Ensure grades.hs exists and Haskell is installed.")
             return {}
         except subprocess.CalledProcessError as e:
-            print(f"⚠ Warning: Haskell execution failed: {e.stderr}")
+            print(f"[WARNING] Haskell execution failed: {e.stderr}")
             return {}
         except json.JSONDecodeError as e:
-            print(f"⚠ Warning: Failed to parse Haskell output: {e}")
+            print(f"[WARNING] Failed to parse Haskell output: {e}")
             return {}
     
     def call_prolog_engine(self) -> Dict:
@@ -144,7 +144,7 @@ class UniversitySystem:
             Dictionary containing graduation eligibility and recommended courses
         """
         try:
-            print("\n🔄 Calling Prolog engine (advisory.pl)...")
+            print("\n[CALLING] Calling Prolog engine (advisory.pl)...")
             result = subprocess.run(
                 ["swipl", "-f", "advisory.pl", "-g", "run_query,halt."],
                 capture_output=True,
@@ -154,18 +154,18 @@ class UniversitySystem:
             
             # Parse JSON output from Prolog
             prolog_output = json.loads(result.stdout)
-            print("✓ Prolog engine executed successfully")
+            print("[OK] Prolog engine executed successfully")
             return prolog_output
             
         except FileNotFoundError:
-            print("⚠ Warning: Prolog program (advisory.pl) not found or swipl not in PATH")
+            print("[WARNING] Prolog program (advisory.pl) not found or swipl not in PATH")
             print("  Returning empty results. Ensure advisory.pl exists and SWI-Prolog is installed.")
             return {}
         except subprocess.CalledProcessError as e:
-            print(f"⚠ Warning: Prolog execution failed: {e.stderr}")
+            print(f"[WARNING] Prolog execution failed: {e.stderr}")
             return {}
         except json.JSONDecodeError as e:
-            print(f"⚠ Warning: Failed to parse Prolog output: {e}")
+            print(f"[WARNING] Failed to parse Prolog output: {e}")
             return {}
     
     def merge_results(self, haskell_results: Dict, prolog_results: Dict) -> List[Student]:
@@ -241,7 +241,7 @@ class UniversitySystem:
         # Merge results
         self.merge_results(haskell_results, prolog_results)
         
-        print(f"\n✓ System initialized with {len(self.students)} students")
+        print(f"\n[OK] System initialized with {len(self.students)} students")
     
     # Functional Programming Operations
     
@@ -366,7 +366,7 @@ class UniversitySystem:
             print(f"Predicted Performance: {student.predict_performance()}")
             print("="*60 + "\n")
         else:
-            print(f"\n✗ Student with ID {student_id} not found.\n")
+            print(f"\n[ERROR] Student with ID {student_id} not found.\n")
     
     def show_top_performer(self):
         """Display the top-performing student."""
@@ -383,7 +383,7 @@ class UniversitySystem:
             print(f"Distinction: {'Yes' if top_student.distinction_status else 'No'}")
             print("="*60 + "\n")
         else:
-            print("\n✗ No top performer found (no students with computed averages).\n")
+            print("\n[ERROR] No top performer found (no students with computed averages).\n")
     
     def show_at_risk_students(self):
         """Display all at-risk students."""
@@ -397,7 +397,7 @@ class UniversitySystem:
                 print(f"ID: {student.id} | Name: {student.name} | Average: {student.average}")
             print("="*60 + "\n")
         else:
-            print("\n✓ No at-risk students found.\n")
+            print("\n[OK] No at-risk students found.\n")
     
     def run_menu(self):
         """Run the main console interface menu."""
@@ -421,16 +421,16 @@ class UniversitySystem:
                     student_id = int(input("Enter student ID: "))
                     self.check_specific_student(student_id)
                 except ValueError:
-                    print("\n✗ Invalid input. Please enter a valid student ID.\n")
+                    print("\n[ERROR] Invalid input. Please enter a valid student ID.\n")
             elif choice == "3":
                 self.show_top_performer()
             elif choice == "4":
                 self.show_at_risk_students()
             elif choice == "5":
-                print("\n✓ Thank you for using Smart University Management System!")
+                print("\n[OK] Thank you for using Smart University Management System!")
                 break
             else:
-                print("\n✗ Invalid choice. Please enter a number between 1 and 5.\n")
+                print("\n[ERROR] Invalid choice. Please enter a number between 1 and 5.\n")
 
 
 def main():
