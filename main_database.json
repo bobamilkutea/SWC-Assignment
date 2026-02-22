@@ -1,0 +1,86 @@
+{
+  "programs": [
+    {
+      "program_code": "CS",
+      "program_name": "Computer Science",
+      "required_courses": ["CS101", "CS102", "CS201", "CS301"]
+    },
+    {
+      "program_code": "IT",
+      "program_name": "Information Technology",
+      "required_courses": ["IT101", "IT102", "IT201"]
+    }
+  ],
+
+  "courses": [
+    {
+      "course_code": "CS101",
+      "course_name": "Programming Fundamentals",
+      "prerequisites": []
+    },
+    {
+      "course_code": "CS102",
+      "course_name": "Data Structures",
+      "prerequisites": ["CS101"]
+    },
+    {
+      "course_code": "CS201",
+      "course_name": "Algorithms",
+      "prerequisites": ["CS102"]
+    },
+    {
+      "course_code": "CS301",
+      "course_name": "Final Year Project",
+      "prerequisites": ["CS201"]
+    },
+    {
+      "course_code": "IT101",
+      "course_name": "Introduction to IT",
+      "prerequisites": []
+    },
+    {
+      "course_code": "IT102",
+      "course_name": "Database Systems",
+      "prerequisites": ["IT101"]
+    },
+    {
+      "course_code": "IT201",
+      "course_name": "Web Development",
+      "prerequisites": ["IT102"]
+    }
+  ],
+
+  "students": [
+    {
+      "id": 101,
+      "name": "Ahmad",
+      "program": "CS",
+      "completed_courses": ["CS101", "CS102"],
+      "grades": {
+        "CS101": 85,
+        "CS102": 78
+      }
+    },
+    {
+      "id": 102,
+      "name": "Siti",
+      "program": "CS",
+      "completed_courses": ["CS101", "CS102", "CS201", "CS301"],
+      "grades": {
+        "CS101": 90,
+        "CS102": 88,
+        "CS201": 92,
+        "CS301": 95
+      }
+    },
+    {
+      "id": 103,
+      "name": "John",
+      "program": "IT",
+      "completed_courses": ["IT101"],
+      "grades": {
+        "IT101": 65
+      }
+    }
+  ]
+}
