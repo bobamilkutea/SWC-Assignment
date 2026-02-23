@@ -190,4 +190,5 @@ main = do
   let students = parseStudentsFromJSON jsonContent
   
   -- Process and output results
+
   putStrLn $ processStudents students
