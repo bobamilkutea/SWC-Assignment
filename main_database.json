@@ -81,6 +81,16 @@
       "grades": {
         "IT101": 65
       }
+    },
+    {
+      "id": 104,
+      "name": "Amsyar",
+      "program": "IT",
+      "completed_courses": ["IT101", "IT102"],
+      "grades": {
+        "IT101": 40,
+        "IT102": 55
+      }
     }
   ]
 }
