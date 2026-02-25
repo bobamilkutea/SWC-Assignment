@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 import System.IO (readFile)
 import Data.List (maximumBy, isInfixOf, intercalate)
 import Data.Ord (comparing)
@@ -192,3 +190,4 @@ main = do
   -- Process and output results
 
   putStrLn $ processStudents students
+
