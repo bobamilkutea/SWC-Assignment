@@ -9,15 +9,14 @@ type StudentGrades = (Int, String, [Double])
 
 -- =========================
 -- FUNCTIONAL PROGRAMMING
--- Functions for grade analysis
 -- =========================
 
--- Recursive sum (pure functional)
+-- Recursive sum 
 recursiveSum :: [Double] -> Double
 recursiveSum [] = 0
 recursiveSum (x:xs) = x + recursiveSum xs
 
--- Recursive length (pure functional)
+-- Recursive length
 recursiveLength :: [Double] -> Double
 recursiveLength [] = 0
 recursiveLength (_:xs) = 1 + recursiveLength xs
@@ -188,6 +187,4 @@ main = do
   let students = parseStudentsFromJSON jsonContent
   
   -- Process and output results
-
   putStrLn $ processStudents students
-
