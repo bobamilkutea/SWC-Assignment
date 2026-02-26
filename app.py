@@ -16,11 +16,14 @@ st.set_page_config(
 # 🌿 Mint Green Minimalist Theme
 # -------------------------------------------------
 st.markdown("""
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+
 <style>
 
 /* Main Background */
 .stApp {
     background-color: #f4fffb;
+    color: #1e293b; /* Ensure text is dark and readable */
 }
 
 /* Sidebar */
@@ -45,7 +48,7 @@ h1, h2, h3 {
 
 /* Buttons */
 .stButton>button {
-    background-color: #34d399;
+    background-color: #059669; /* Darker emerald for better contrast with white text */
     color: white;
     border-radius: 12px;
     border: none;
@@ -54,7 +57,7 @@ h1, h2, h3 {
 }
 
 .stButton>button:hover {
-    background-color: #10b981;
+    background-color: #047857; /* Even darker on hover */
 }
 
 /* Forms */
@@ -84,6 +87,107 @@ div[data-baseweb="select"] > div {
     border-radius: 10px;
 }
 
+/* ------------------------------------------------- */
+/* NAVIGATION STYLING (Custom Radio Buttons) */
+/* ------------------------------------------------- */
+
+/* Hide the default radio circles */
+div[role="radiogroup"] > label > div:first-child {
+    display: none !important;
+}
+
+/* Style the container of the radio options to look like list items */
+div[role="radiogroup"] {
+    gap: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Style individual radio labels (the clickable area) */
+div[role="radiogroup"] label {
+    background-color: transparent;
+    padding: 12px 16px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    width: 100%;
+}
+
+/* Hover effect for navigation items */
+div[role="radiogroup"] label:hover {
+    background-color: #d1fae5;
+    border-color: #a7f3d0;
+    transform: translateX(5px);
+}
+
+/* Active/Selected state styling */
+/* We target the label that contains the checked input using :has() selector */
+/* Note: :has() is supported in most modern browsers. Fallback is acceptable. */
+div[role="radiogroup"] label:has(input:checked) {
+    background-color: #10b981 !important;
+    color: white !important;
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+}
+
+/* Ensure text inside the active label is white */
+div[role="radiogroup"] label:has(input:checked) p {
+    color: white !important;
+    font-weight: bold;
+}
+
+/* General text styling for nav items */
+div[role="radiogroup"] label p {
+    font-size: 1rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* ------------------------------------------------- */
+/* ICONS INJECTION (Material Symbols) */
+/* ------------------------------------------------- */
+
+/* Common style for all icons */
+div[role="radiogroup"] label p::before {
+    font-family: 'Material Symbols Rounded';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 1.3rem;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Dashboard Icon */
+div[role="radiogroup"] label:nth-of-type(1) p::before {
+    content: "\\e871"; /* dashboard */
+}
+
+/* Add Student Icon */
+div[role="radiogroup"] label:nth-of-type(2) p::before {
+    content: "\\e7fe"; /* person_add */
+}
+
+/* Top Performer Icon */
+div[role="radiogroup"] label:nth-of-type(3) p::before {
+    content: "\\ea38"; /* emoji_events */
+}
+
+/* At-Risk Students Icon */
+div[role="radiogroup"] label:nth-of-type(4) p::before {
+    content: "\\e002"; /* warning */
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -110,10 +214,14 @@ init_system()
 st.sidebar.markdown("## 🎓 Smart University")
 st.sidebar.caption("Management System")
 
-page = st.sidebar.selectbox(
+# Custom styled radio button navigation
+page_selection = st.sidebar.radio(
     "Navigate",
-    ["Dashboard", "Add Student", "Top Performer", "At-Risk Students"]
+    ["Dashboard", "Add Student", "Top Performer", "At-Risk Students"],
+    label_visibility="collapsed"
 )
+
+page = page_selection
 
 # -------------------------------------------------
 # DASHBOARD
