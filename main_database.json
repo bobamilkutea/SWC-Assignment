@@ -138,6 +138,52 @@
         "CS102": 90.0,
         "MATH201": 100.0
       }
+    },
+    {
+      "id": 1,
+      "name": "Arief",
+      "program": "CS",
+      "completed_courses": [
+        "CS101",
+        "CS102"
+      ],
+      "grades": {
+        "CS101": 75.0,
+        "CS102": 65.0
+      }
+    },
+    {
+      "id": 106,
+      "name": "syamir",
+      "program": "CS",
+      "completed_courses": [
+        "CS101"
+      ],
+      "grades": {
+        "CS101": 65.0
+      }
+    },
+    {
+      "id": 110,
+      "name": "Dina",
+      "program": "CS",
+      "completed_courses": [
+        "CS101"
+      ],
+      "grades": {
+        "CS101": 34.0
+      }
+    },
+    {
+      "id": 111,
+      "name": "Carrot",
+      "program": "CS",
+      "completed_courses": [
+        "CS102"
+      ],
+      "grades": {
+        "CS102": 40.0
+      }
     }
   ]
 }

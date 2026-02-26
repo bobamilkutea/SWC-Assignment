@@ -218,9 +218,20 @@ class UniversitySystem:
                 text=True,
                 check=True
             )
-            
-            # Parse JSON output from Prolog
-            prolog_output = json.loads(result.stdout)
+
+            # Some SWI-Prolog versions may print notices before the JSON.
+            # To be robust, extract the JSON substring between the first '{'
+            # and the last '}' and parse that.
+            raw_output = result.stdout.strip()
+            start = raw_output.find("{")
+            end = raw_output.rfind("}")
+
+            if start == -1 or end == -1 or end < start:
+                raise json.JSONDecodeError("No JSON object found in Prolog output", raw_output, 0)
+
+            json_str = raw_output[start : end + 1]
+
+            prolog_output = json.loads(json_str)
             print("[OK] Prolog engine executed successfully")
             return prolog_output
             
@@ -233,6 +244,8 @@ class UniversitySystem:
             return {}
         except json.JSONDecodeError as e:
             print(f"[WARNING] Failed to parse Prolog output: {e}")
+            print("[DEBUG] Raw Prolog stdout was:")
+            print(result.stdout)
             return {}
     
     def callprolog(self) -> Dict:
