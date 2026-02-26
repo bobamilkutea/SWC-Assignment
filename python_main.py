@@ -8,30 +8,36 @@ import pandas as pd
 
 
 class Student:
-    """
-    Student class
-    """
-    
-    def __init__(self, student_id: int, name: str, program: str, 
+    def __init__(self, student_id: int, name: str, program: str,
                  completed_courses: List[str], grades: Dict[str, float],
                  average: Optional[float] = None,
                  distinction_status: Optional[bool] = None,
-                 graduation_eligibility: Optional[bool] = None,
-                 recommended_courses: Optional[List[str]] = None):
+                 grad_eligibility: Optional[bool] = None,
+                 recommended: Optional[List[str]] = None):
         """
-        Initialize a Student object.
-        
-        Args:
-            student_id: Unique student identifier
-            name: Student's name
-            program: Program code (e.g., "CS", "IT")
-            completed_courses: List of completed course codes
-            grades: Dictionary mapping course codes to grades
-            average: Average grade (computed by Haskell)
-            distinction_status: Whether student has distinction (computed by Haskell)
-            graduation_eligibility: Whether student is eligible for graduation (computed by Prolog)
-            recommended_courses: List of recommended courses (computed by Prolog)
+        Python constructor.
+        Delegates to the explicit init method so we can also expose a
+        method literally named 'init' if required by the assignment.
         """
+        self.init(
+            student_id,
+            name,
+            program,
+            completed_courses,
+            grades,
+            average,
+            distinction_status,
+            grad_eligibility,
+            recommended,
+        )
+
+    def init(self, student_id: int, name: str, program: str,
+             completed_courses: List[str], grades: Dict[str, float],
+             average: Optional[float] = None,
+             distinction_status: Optional[bool] = None,
+             grad_eligibility: Optional[bool] = None,
+             recommended: Optional[List[str]] = None):
+        """Simple container for one student's data."""
         self.id = student_id
         self.name = name
         self.program = program
@@ -39,16 +45,10 @@ class Student:
         self.grades = grades
         self.average = average
         self.distinction_status = distinction_status
-        self.graduation_eligibility = graduation_eligibility
-        self.recommended_courses = recommended_courses or []
+        self.graduation_eligibility = grad_eligibility
+        self.recommended_courses = recommended or []
     
     def predict_performance(self) -> str:
-        """
-        Predict student performance based on average grade.
-        
-        Returns:
-            Performance category: "Excellent", "Good", "Average", or "At Risk"
-        """
         if self.average is None:
             return "N/A"
         
@@ -62,33 +62,22 @@ class Student:
             return "At Risk"
     
     def __repr__(self) -> str:
-        """String representation of Student object."""
-        return f"Student(id={self.id}, name={self.name}, program={self.program}, average={self.average})"
+        return f"Student(id={self.id}, name={self.name}, program={self.program}, avg={self.average})"
+
+    def repr(self) -> str:
+        """Alias for __repr__ so a method literally named 'repr' exists."""
+        return self.__repr__()
 
 
 class UniversitySystem:
-    """
-    Main system class that integrates Haskell and Prolog engines.
-    Demonstrates multi-paradigm programming in Python.
-    """
-    
     def __init__(self, database_path: str = "main_database.json"):
-        """
-        Initialize the University System.
-        
-        Args:
-            database_path: Path to the main database JSON file
-        """
         self.database_path = database_path
         self.students: List[Student] = []
         self.database_data: Dict = {}
     
     def load_database(self) -> Dict:
         """
-        Read and load data from main_database.json.
-        
-        Returns:
-            Dictionary containing students, programs, and courses data
+        Read and load data from database.
         """
         try:
             with open(self.database_path, 'r', encoding='utf-8') as f:
@@ -102,13 +91,54 @@ class UniversitySystem:
             print(f"[ERROR] Invalid JSON format in {self.database_path}: {e}")
             sys.exit(1)
     
+    def save_database(self):
+        """
+        Save current database data to JSON file.
+        """
+        try:
+            with open(self.database_path, 'w', encoding='utf-8') as f:
+                json.dump(self.database_data, f, indent=2, ensure_ascii=False)
+            print(f"[OK] Successfully saved database to {self.database_path}")
+        except Exception as e:
+            print(f"[ERROR] Failed to save database: {e}")
+            raise
+    
+    def add_student_to_database(self, student_id: int, name: str, program: str, 
+                                completed_courses: List[str], grades: Dict[str, float]):
+        """
+        Add a new student to the JSON database.
+        """
+        # Reload database to get latest data
+        self.load_database()
+        
+        # Create new student entry
+        new_student = {
+            "id": student_id,
+            "name": name,
+            "program": program,
+            "completed_courses": completed_courses,
+            "grades": grades
+        }
+        
+        # Add to students list
+        if "students" not in self.database_data:
+            self.database_data["students"] = []
+        
+        self.database_data["students"].append(new_student)
+        
+        # Save to file
+        self.save_database()
+    
+    def init(self, database_path: str = "main_database.json"):
+        """
+        Optional initializer named 'init' for compatibility with
+        assignment naming, delegates to __init__.
+        """
+        self.__init__(database_path)
+    
     def call_haskell_engine(self) -> Dict:
         """
-        Call Haskell program (grades.hs) using subprocess.
-        Haskell computes averages and identifies distinction students.
-        
-        Returns:
-            Dictionary containing student averages and distinction status
+        Call Haskell
         """
         try:
             print("\n[CALLING] Calling Haskell engine (grades.hs)...")
@@ -123,10 +153,10 @@ class UniversitySystem:
             haskell_output = json.loads(result.stdout)
             print("[OK] Haskell engine executed successfully")
             return haskell_output
-            
+        
         except FileNotFoundError:
             print("[WARNING] Haskell program (grades.hs) not found or runhaskell not in PATH")
-            print("  Returning empty results. Ensure grades.hs exists and Haskell is installed.")
+            
             return {}
         except subprocess.CalledProcessError as e:
             print(f"[WARNING] Haskell execution failed: {e.stderr}")
@@ -135,18 +165,18 @@ class UniversitySystem:
             print(f"[WARNING] Failed to parse Haskell output: {e}")
             return {}
     
+    def callhaskell(self) -> Dict:
+        """Alias so a method literally named 'callhaskell' is available."""
+        return self.call_haskell_engine()
+    
     def call_prolog_engine(self) -> Dict:
         """
-        Call Prolog program (advisory.pl) using subprocess.
-        Prolog checks eligibility and recommends courses.
-        
-        Returns:
-            Dictionary containing graduation eligibility and recommended courses
+        Call Prolog
         """
         try:
-            print("\n[CALLING] Calling Prolog engine (advisory.pl)...")
+            print("\n[CALLING] Calling Prolog engine (PrologAssignment.pl)...")
             result = subprocess.run(
-                ["swipl", "-f", "advisory.pl", "-g", "run_query,halt."],
+                ["swipl", "-f", "PrologAssignment.pl", "-g", "run_query,halt."],
                 capture_output=True,
                 text=True,
                 check=True
@@ -158,8 +188,8 @@ class UniversitySystem:
             return prolog_output
             
         except FileNotFoundError:
-            print("[WARNING] Prolog program (advisory.pl) not found or swipl not in PATH")
-            print("  Returning empty results. Ensure advisory.pl exists and SWI-Prolog is installed.")
+            print("[WARNING] Prolog not found")
+            
             return {}
         except subprocess.CalledProcessError as e:
             print(f"[WARNING] Prolog execution failed: {e.stderr}")
@@ -168,28 +198,24 @@ class UniversitySystem:
             print(f"[WARNING] Failed to parse Prolog output: {e}")
             return {}
     
+    def callprolog(self) -> Dict:
+        """Alias so a method literally named 'callprolog' is available."""
+        return self.call_prolog_engine()
+    
     def merge_results(self, haskell_results: Dict, prolog_results: Dict) -> List[Student]:
         """
-        Merge base data, Haskell results, and Prolog results.
-        Match students by ID and create Student objects.
-        
-        Args:
-            haskell_results: Results from Haskell engine
-            prolog_results: Results from Prolog engine
-            
-        Returns:
-            List of Student objects with merged data
+        Merge all data from haskell and prolog and output result
         """
         students = []
         
         # Create a mapping of student ID to results
-        haskell_map = {}
+        haskellmap: Dict[int, Dict] = {}
         if "students" in haskell_results:
             for student_data in haskell_results["students"]:
                 student_id = student_data.get("id")
-                haskell_map[student_id] = student_data
+                haskellmap[student_id] = student_data
         
-        prolog_map = {}
+        prolog_map: Dict[int, Dict] = {}
         if "students" in prolog_results:
             for student_data in prolog_results["students"]:
                 student_id = student_data.get("id")
@@ -200,14 +226,14 @@ class UniversitySystem:
             student_id = base_student["id"]
             
             # Get Haskell results for this student
-            haskell_data = haskell_map.get(student_id, {})
+            haskell_data = haskellmap.get(student_id, {})
             average = haskell_data.get("average")
             distinction_status = haskell_data.get("distinction", False)
             
             # Get Prolog results for this student
             prolog_data = prolog_map.get(student_id, {})
-            graduation_eligibility = prolog_data.get("graduation_eligible", False)
-            recommended_courses = prolog_data.get("recommended_courses", [])
+            grad_eligibility = prolog_data.get("graduation_eligible", False)
+            recommended = prolog_data.get("recommended_courses", [])
             
             # Create Student object
             student = Student(
@@ -218,14 +244,18 @@ class UniversitySystem:
                 grades=base_student["grades"],
                 average=average,
                 distinction_status=distinction_status,
-                graduation_eligibility=graduation_eligibility,
-                recommended_courses=recommended_courses
+                grad_eligibility=grad_eligibility,
+                recommended=recommended
             )
             
             students.append(student)
         
         self.students = students
         return students
+    
+    def mergeresult(self, haskell_results: Dict, prolog_results: Dict) -> List[Student]:
+        """Alias so a method literally named 'mergeresult' is available."""
+        return self.merge_results(haskell_results, prolog_results)
     
     def initialize_system(self):
         """Initialize the system by loading data and calling external engines."""
@@ -245,34 +275,27 @@ class UniversitySystem:
     
     # Functional Programming Operations
     
-    def get_distinction_students(self) -> List[Student]:
+    def distinct_students(self) -> List[Student]:
         """
-        Identify all distinction students using filter (Functional Programming).
-        
-        Returns:
-            List of students with distinction status
+        Identify all distinction students using filter
+
         """
         return list(filter(lambda s: s.distinction_status is True, self.students))
     
     def get_at_risk_students(self) -> List[Student]:
         """
-        Identify at-risk students using filter and lambda (Functional Programming).
+        Identify at-risk students using filter and lambda
         At-risk students have average < 50 or no average computed.
-        
-        Returns:
-            List of at-risk students
+
         """
         return list(filter(
-            lambda s: s.average is not None and s.average < 50,
+            lambda s: s.average is None or s.average < 50,
             self.students
         ))
     
-    def generate_performance_predictions(self) -> List[Dict]:
+    def perf_predictions(self) -> List[Dict]:
         """
-        Generate performance predictions for all students using map (Functional Programming).
-        
-        Returns:
-            List of dictionaries with student ID and predicted performance
+        Generate performance predictions for all students using map
         """
         return list(map(
             lambda s: {"id": s.id, "name": s.name, "prediction": s.predict_performance()},
@@ -281,10 +304,7 @@ class UniversitySystem:
     
     def rank_students_by_average(self) -> List[Student]:
         """
-        Rank students by average grade using sorted and lambda (Functional Programming).
-        
-        Returns:
-            List of students sorted by average (descending)
+        Rank students by average grade using sorted and lambda
         """
         return sorted(
             self.students,
@@ -294,22 +314,25 @@ class UniversitySystem:
     
     def get_top_performer(self) -> Optional[Student]:
         """
+        Alias for top_perform so other parts of the code that expect
+        get_top_performer continue to work.
+        """
+        return self.top_perform()
+    
+    def top_perform(self) -> Optional[Student]:
+        """
         Get the top-performing student using functional programming.
         
-        Returns:
-            Student with highest average, or None if no students
         """
         ranked = self.rank_students_by_average()
         return ranked[0] if ranked and ranked[0].average is not None else None
     
     # Pandas Integration
     
-    def create_dataframe(self) -> pd.DataFrame:
+    def dataframe(self) -> pd.DataFrame:
         """
         Create a pandas DataFrame with student information.
         
-        Returns:
-            DataFrame containing student data
         """
         data = []
         for student in self.students:
@@ -327,9 +350,13 @@ class UniversitySystem:
         df = pd.DataFrame(data)
         return df
     
-    def display_dashboard(self):
+    def create_dataframe(self) -> pd.DataFrame:
+        """Alias for dataframe to keep the original method name usable."""
+        return self.dataframe()
+    
+    def dashboard(self):
         """Display a formatted dashboard using pandas DataFrame."""
-        df = self.create_dataframe()
+        df = self.dataframe()
         print("\n" + "="*100)
         print("STUDENT DASHBOARD".center(100))
         print("="*100)
@@ -338,16 +365,23 @@ class UniversitySystem:
     
     # Console Interface
     
-    def view_all_students(self):
-        """Display all students in a formatted table."""
-        self.display_dashboard()
+    def display_dashboard(self):
+        """Alias for dashboard to keep the original method name usable."""
+        return self.dashboard()
     
-    def check_specific_student(self, student_id: int):
+    def all_students(self):
+        """Display all students in a formatted table."""
+        self.dashboard()
+        input("\nPress Enter to return to the main menu...")
+    
+    def view_all_students(self):
+        """Alias for all_students to keep the original method name usable."""
+        return self.all_students()
+    
+    def check_specific(self, student_id: int):
         """
         Display detailed information for a specific student.
-        
-        Args:
-            student_id: ID of the student to display
+
         """
         student = next((s for s in self.students if s.id == student_id), None)
         
@@ -367,8 +401,14 @@ class UniversitySystem:
             print("="*60 + "\n")
         else:
             print(f"\n[ERROR] Student with ID {student_id} not found.\n")
+        
+        input("\nPress Enter to return to the main menu...")
     
-    def show_top_performer(self):
+    def check_specific_student(self, student_id: int):
+        """Alias for check_specific to keep the original method name usable."""
+        return self.check_specific(student_id)
+    
+    def top_performer(self):
         """Display the top-performing student."""
         top_student = self.get_top_performer()
         
@@ -384,8 +424,14 @@ class UniversitySystem:
             print("="*60 + "\n")
         else:
             print("\n[ERROR] No top performer found (no students with computed averages).\n")
+        
+        input("\nPress Enter to return to the main menu...")
     
-    def show_at_risk_students(self):
+    def show_top_performer(self):
+        """Alias for top_performer to keep the original method name usable."""
+        return self.top_performer()
+    
+    def at_risk_students(self):
         """Display all at-risk students."""
         at_risk = self.get_at_risk_students()
         
@@ -398,8 +444,14 @@ class UniversitySystem:
             print("="*60 + "\n")
         else:
             print("\n[OK] No at-risk students found.\n")
+        
+        input("\nPress Enter to return to the main menu...")
     
-    def run_menu(self):
+    def show_at_risk_students(self):
+        """Alias for at_risk_students to keep the original method name usable."""
+        return self.at_risk_students()
+    
+    def menu(self):
         """Run the main console interface menu."""
         while True:
             print("\n" + "="*60)
@@ -415,22 +467,26 @@ class UniversitySystem:
             choice = input("\nEnter your choice (1-5): ").strip()
             
             if choice == "1":
-                self.view_all_students()
+                self.all_students()
             elif choice == "2":
                 try:
                     student_id = int(input("Enter student ID: "))
-                    self.check_specific_student(student_id)
+                    self.check_specific(student_id)
                 except ValueError:
                     print("\n[ERROR] Invalid input. Please enter a valid student ID.\n")
             elif choice == "3":
-                self.show_top_performer()
+                self.top_performer()
             elif choice == "4":
-                self.show_at_risk_students()
+                self.at_risk_students()
             elif choice == "5":
                 print("\n[OK] Thank you for using Smart University Management System!")
                 break
             else:
                 print("\n[ERROR] Invalid choice. Please enter a number between 1 and 5.\n")
+
+    def run_menu(self):
+        """Alias for menu to keep the original method name usable."""
+        return self.menu()
 
 
 def main():

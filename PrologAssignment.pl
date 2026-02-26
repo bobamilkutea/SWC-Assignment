@@ -1,43 +1,66 @@
-% Facts for students
-student('Arief', s001).
-student('Amsyar', s002).
-student('Syamir', s003).
+:- use_module(library(http/json)).
 
-% Facts for enrollments (completed courses)
-enrolled(s001, 'MMC3113').
-enrolled(s001, 'SWC3524').
-enrolled(s001, 'ITC3084').
+% ------------------------------------------------------------------
+% Helper predicates
+% ------------------------------------------------------------------
 
-enrolled(s002, 'MMC3113').
-enrolled(s002, 'ITC3084').
+subset([], _).
+subset([H|T], L) :- member(H, L), subset(T, L).
 
-enrolled(s003, 'MMC3113').
-enrolled(s003, 'SWC3524').
-enrolled(s003, 'ITC3084').
-enrolled(s003, 'SWC2623').
+% Determine if a student is eligible for graduation based on program
+% requirements and completed courses from main_database.json.
+graduation_eligible(Programs, StudentDict, Eligible) :-
+    ProgramCode = StudentDict.program,
+    Completed   = StudentDict.completed_courses,
+    % find the matching program
+    member(Prog, Programs),
+    ProgramCode = Prog.program_code,
+    Required = Prog.required_courses,
+    (  subset(Required, Completed)
+    -> Eligible = true
+    ;  Eligible = false
+    ).
 
-% Facts for prerequisites
-prerequisite('SWC3524', 'MMC3113').
-prerequisite('SWC2623', 'MMC3113').
+% Compute recommended courses: courses whose prerequisites are satisfied
+% but which the student has not yet completed.
+recommended_courses(Courses, StudentDict, Recommended) :-
+    Completed = StudentDict.completed_courses,
+    findall(Code,
+      ( member(C, Courses),
+        Code = C.course_code,
+        \+ member(Code, Completed),
+        PreReqs = C.prerequisites,
+        subset(PreReqs, Completed)
+      ),
+      Recommended).
 
-% Check if student has completed a course
-completed(StudentID, CourseCode) :- enrolled(StudentID, CourseCode).
+% Build a single student result dict for JSON output
+student_result(Programs, Courses, StudentDict, Result) :-
+    graduation_eligible(Programs, StudentDict, Eligible),
+    recommended_courses(Courses, StudentDict, Recommended),
+    Result = _{
+        id: StudentDict.id,
+        graduation_eligible: Eligible,
+        recommended_courses: Recommended
+    }.
 
-% Check if eligible to enroll (all prereqs completed)
-eligible(StudentID, CourseCode) :-
-    findall(Prereq, prerequisite(CourseCode, Prereq), Prereqs),
-    forall(member(Prereq, Prereqs), completed(StudentID, Prereq)).
-
-% Recommend courses (eligible but not enrolled)
-recommend(StudentID, CourseCode) :-
-    prerequisite(CourseCode, _),
-    eligible(StudentID, CourseCode),
-    \+ enrolled(StudentID, CourseCode).
-
-% Eligible for graduation (completed all required courses)
-required_course('MMC3113').
-required_course('SWC3524').
-required_course('ITC3084').
-
-eligible_for_graduation(StudentID) :-
-    forall(required_course(Course), completed(StudentID, Course)).
+% ------------------------------------------------------------------
+% Entry point called from Python:
+%   swipl -f PrologAssignment.pl -g run_query,halt.
+% Produces JSON like:
+% {
+%   "students": [
+%     { "id": 101, "graduation_eligible": false, "recommended_courses": ["CS201"] }
+%   ]
+% }
+% ------------------------------------------------------------------
+run_query :-
+    open('main_database.json', read, Stream),
+    json_read_dict(Stream, Data),
+    close(Stream),
+    Programs = Data.programs,
+    Courses  = Data.courses,
+    Students = Data.students,
+    maplist(student_result(Programs, Courses), Students, ResultStudents),
+    json_write_dict(current_output, _{students: ResultStudents}),
+    nl.

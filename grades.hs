@@ -127,51 +127,62 @@ parseStudentsFromJSON json =
         Just sid -> (sid, extractStudentName obj, extractStudentGrades obj)
         Nothing -> (-1, "", [])
 
--- =========================
 -- RESULT PROCESSING
 -- =========================
 
--- Create result string (simple output)
-formatStudentResult :: Int -> String -> Double -> Bool -> String
-formatStudentResult sid sname avg dist =
-  "    { \"student_id\": " ++ show sid ++ 
-  ", \"student_name\": \"" ++ sname ++ 
-  "\", \"average_grade\": " ++ formatDouble avg ++ 
-  ", \"has_distinction\": " ++ (if dist then "true" else "false") ++ " }"
+-- Create result string for one student (as JSON object)
+-- Shape matches what python_main.py expects:
+-- { "id": 101, "average": 81.5, "distinction": true }
+formatStudentJSON :: Int -> Double -> Bool -> String
+formatStudentJSON sid avg dist =
+  "    { \"id\": " ++ show sid ++
+  ", \"average\": " ++ formatDouble avg ++
+  ", \"distinction\": " ++ (if dist then "true" else "false") ++ " }"
 
 formatDouble :: Double -> String
 formatDouble d = take 5 (show d)
 
--- Process a list of students
+-- Process a list of students and build JSON that python_main.py expects.
+-- Root keys:
+--   "students"           – all students with averages and distinction flags
+--   "distinction_students" – optional extra list (not currently used by Python)
+--   "top_student"        – best performer (not currently used by Python)
 processStudents :: [StudentGrades] -> String
 processStudents students =
-  let results = map processOne students
-      distinctionStudents = filter (\(_, _, _, d) -> d) results
-      topPerformer = if null results 
+  let results = map processOne students             -- [(id, avg, dist)]
+      distinctionStudents = filter (\(_, _, d) -> d) results
+      topPerformer = if null results
                      then Nothing
-                     else Just $ maximumBy (comparing (\(_, _, a, _) -> a)) results
+                     else Just $ maximumBy (comparing (\(_, a, _) -> a)) results
   in buildJSON results distinctionStudents topPerformer
   where
-    processOne (sid, sname, grades) =
+    processOne (sid, _sname, grades) =
       let avg = calculateAverage grades
           dist = hasDistinction avg
-      in (sid, sname, avg, dist)
+      in (sid, avg, dist)
 
-buildJSON :: [(Int, String, Double, Bool)] -> [(Int, String, Double, Bool)] -> Maybe (Int, String, Double, Bool) -> String
+-- JSON builder matching the structure documented in README_PART_C.md
+buildJSON :: [(Int, Double, Bool)]
+          -> [(Int, Double, Bool)]
+          -> Maybe (Int, Double, Bool)
+          -> String
 buildJSON allStudents distinctionStudents topPerformer =
-  "{\n  \"all_students\": [\n" ++
-  intercalate ",\n" (map (\(sid, sname, avg, dist) -> 
-    formatStudentResult sid sname avg dist) allStudents) ++
+  "{\n" ++
+  "  \"students\": [\n" ++
+  intercalate ",\n"
+    (map (\(sid, avg, dist) -> formatStudentJSON sid avg dist) allStudents) ++
   "\n  ],\n" ++
   "  \"distinction_students\": [\n" ++
-  intercalate ",\n" (map (\(sid, sname, avg, dist) -> 
-    formatStudentResult sid sname avg dist) distinctionStudents) ++
+  intercalate ",\n"
+    (map (\(sid, avg, dist) -> formatStudentJSON sid avg dist) distinctionStudents) ++
   "\n  ],\n" ++
-  "  \"top_performer\": " ++
-  (case topPerformer of
-    Just (sid, sname, avg, dist) -> 
-      formatStudentResult sid sname avg dist ++ "\n"
-    Nothing -> "null\n") ++
+  "  \"top_student\": " ++
+    (case topPerformer of
+       Just (sid, avg, dist) ->
+         "{ \"id\": " ++ show sid ++
+         ", \"average\": " ++ formatDouble avg ++
+         ", \"distinction\": " ++ (if dist then "true" else "false") ++ " }\n"
+       Nothing -> "null\n") ++
   "}\n"
 
 -- =========================
