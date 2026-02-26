@@ -128,6 +128,43 @@ class UniversitySystem:
         
         # Save to file
         self.save_database()
+
+    def update_student_courses(
+        self,
+        student_id: int,
+        new_completed_courses: List[str],
+        new_grades: Dict[str, float],
+    ):
+        """
+        Update an existing student's completed courses and grades in the JSON database.
+        Used when a student completes new courses to recalculate averages.
+        """
+        self.load_database()
+
+        students_list = self.database_data.get("students", [])
+        target_student = next((s for s in students_list if s.get("id") == student_id), None)
+
+        if not target_student:
+            raise ValueError(f"Student with ID {student_id} not found in database.")
+
+        # Merge completed courses (avoid duplicates)
+        existing_courses = set(target_student.get("completed_courses", []))
+        for course in new_completed_courses:
+            course_code = course.strip()
+            if course_code and course_code not in existing_courses:
+                existing_courses.add(course_code)
+
+        target_student["completed_courses"] = sorted(existing_courses)
+
+        # Merge grades (overwrite or add new)
+        existing_grades = target_student.get("grades", {})
+        for course, grade in new_grades.items():
+            existing_grades[course] = grade
+
+        target_student["grades"] = existing_grades
+
+        # Save updated database
+        self.save_database()
     
     def init(self, database_path: str = "main_database.json"):
         """
