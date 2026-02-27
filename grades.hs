@@ -127,6 +127,7 @@ parseStudentsFromJSON json =
         Just sid -> (sid, extractStudentName obj, extractStudentGrades obj)
         Nothing -> (-1, "", [])
 
+-- =========================
 -- RESULT PROCESSING
 -- =========================
 
@@ -199,3 +200,4 @@ main = do
   
   -- Process and output results
   putStrLn $ processStudents students
+
